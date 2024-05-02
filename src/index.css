@@ -8,16 +8,3 @@
 }
 
 
-body {
-  font-family: "Poppins", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: url('./Components/Assets/california-streaming-apple-event-wallpaper-mac-nologo.png');
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
-
-
-}
