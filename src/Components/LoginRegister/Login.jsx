@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect } from 'react';
 import './LoginRegister.css'
 import { FaUser } from "react-icons/fa6";
 import { FaUserPlus } from "react-icons/fa6";
@@ -18,18 +18,32 @@ function Login() {
     const [username, setUsername] = useState([]);
     const [password, setPassword] = useState([]);
     const navigate = useNavigate()
+    axios.defaults.withCredentials = true;
+    useEffect(()=>{
+        axios.get('http://localhost:3001')
+        .then( res => {
+            if(res.data.valid){
+                navigate('/')
+            }else{
+                navigate('/login')
+            }
+        })
+        .catch(err => console.log(err))
+
+    },[])
+
     const handleSubmit = (e) => {
         e.preventDefault();
         axios.post('http://localhost:3001/login', { username, password })
             .then(result => {
-                console.log(result);
                 if (result.data === "user") {
                     navigate('/');
+
                 }
                 else if (result.data === "admin"){
                     navigate('/admin');
                 }else {
-                    console.log("Invalid username or password");
+                    console.log("Fail");
                 }
             })
             .catch(err => console.error(err));
