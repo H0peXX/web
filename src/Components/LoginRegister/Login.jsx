@@ -6,28 +6,35 @@ import { RiLockPasswordFill } from "react-icons/ri";
 import { MdEmail } from "react-icons/md";
 import { FaPhone } from "react-icons/fa6";
 import { FaWallet } from "react-icons/fa6";
-import 'react-toastify/ReactToastify.css';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import { Link } from 'react-router-dom';
 import axios from "axios"
 import { useNavigate } from 'react-router-dom';
 
 
 function Login() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState([]);
+    const [password, setPassword] = useState([]);
     const navigate = useNavigate()
     const handleSubmit = (e) => {
-        e.preventDefault()
+        e.preventDefault();
         axios.post('http://localhost:3001/login', { username, password })
             .then(result => {
-                console.log(result)
-                if(result.data ==="Success"){
-                    navigate('/home')
+                console.log(result);
+                if (result.data === "user") {
+                    navigate('/');
                 }
-               
+                else if (result.data === "admin"){
+                    navigate('/admin');
+                }else {
+                    console.log("Invalid username or password");
+                }
             })
-            .catch(err => console.log(err))
-    }
+            .catch(err => console.error(err));
+    };
+    
     return (
         <div className="container">
             <div className='form-register'>

@@ -36,7 +36,7 @@ function Register() {
 
                     <div>
                         <FaUser className='icon' />
-                        <input type='text' placeholder='First name' onChange={(e) => setfName(e.target.value)} required />
+                        <input type='text' placeholder='First name' onChange={(e) => setfName( e.target.value)} required />
                     </div>
 
                     <div>
