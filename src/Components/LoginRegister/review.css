@@ -1,0 +1,15 @@
+.star-filled {
+    color: yellow;
+}
+
+.star-empty {
+    color: black;
+}
+
+.star-filled:hover {
+    cursor: pointer;
+}
+
+.star-empty:hover {
+    cursor: pointer;
+}

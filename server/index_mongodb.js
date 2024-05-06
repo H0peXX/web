@@ -49,10 +49,9 @@ app.get('/', (req, res) => {
 app.post('/login', (req, res) => {
     console.log(req);
     const sql = `
-        SELECT u.*, r.role 
-        FROM user_info u 
-        JOIN roles r ON u.username = r.username 
-        WHERE u.username = ? `;
+        SELECT *
+        FROM user_info
+        WHERE username = ? `;
     db.query(sql, [req.body.username], (err, result) => {
         if (err) {
             console.error("Error:", err);
@@ -88,20 +87,19 @@ app.post('/login', (req, res) => {
 
 
 
-//Register
-app.post('/register', async (req, res) => {
-    const { address, username, email, firstname, lastname, phone } = req.body;
-    const password = req.body.password;
-    const hashPassword = bcrypt.hash(password, salt, (err, hash) => {
-        if (err) {
-            console.log(err);
-        }
-    })
 
+
+// Register
+app.post('/register', async (req, res) => {
+    const { address, username, email, firstname, lastname, phone, password } = req.body;
+    
     try {
+        // Hash the password
+        const hashPassword = await bcrypt.hash(password, 10); // Using 10 rounds of salt
+        
         // Insert user info
         await new Promise((resolve, reject) => {
-            const sql2 = "INSERT INTO user_info (address, username, password, mail, firstname, lastname, phone) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            const sql2 = "INSERT INTO user_info (address, username, password, mail, firstname, lastname, phone,role) VALUES (?, ?, ?, ?, ?, ?, ?, 'user')";
             db.query(sql2, [address, username, hashPassword, email, firstname, lastname, phone], (err, result) => {
                 if (err) {
                     console.error('Error registering user:', err);
@@ -112,23 +110,87 @@ app.post('/register', async (req, res) => {
             });
         });
 
-        // Insert user role
-        await new Promise((resolve, reject) => {
-            const sql3 = "INSERT INTO roles (username, role) VALUES (?, 'user')";
-            db.query(sql3, [username], (err, result) => {
-                if (err) {
-                    console.error('Error registering user:', err);
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
 
         return res.json({ message: "User registered successfully" });
     } catch (error) {
+        console.error('Error registering user:', error);
         return res.status(500).json({ message: "Error registering user" });
     }
 });
 
 
+
+// Review
+app.post('/review', async (req, res) => {
+    const { rating, review } = req.body;
+
+    try {
+        // Insert review data into the database
+        const sql = "INSERT INTO reviews (rating, review) VALUES (?, ?)";
+        db.query(sql, [rating, review], (err, result) => {
+            if (err) {
+                console.error('Error saving review:', err);
+                return res.json('Fail');
+            } else {
+                console.log('Review saved successfully');
+                return res.json('ReviewSuccess');
+            }
+        });
+    } catch (error) {
+        console.error('Error saving review:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+// User_Table
+app.get('/user_table', (req, res) => {
+    // Query to fetch user_info data from the database
+    const sql = "SELECT id, address, username, mail, firstname, lastname, phone, role FROM user_info";
+
+    // Execute the query
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error('Error fetching user_info data:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        } else {
+            // Send the fetched user_info data to the client
+            res.json(result);
+        }
+    });
+});
+
+// Review_table
+app.get('/review_table', (req, res) => {
+    // Query to fetch user_info data from the database
+    const sql = "SELECT * FROM reviews";
+
+    // Execute the query
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error('Error fetching user_info data:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        } else {
+            // Send the fetched user_info data to the client
+            res.json(result);
+        }
+    });
+});
+
+// Transaction_table
+app.get('/transaction_table', (req, res) => {
+    // Query to fetch user_info data from the database
+    const sql = "SELECT * FROM transaction";
+
+    // Execute the query
+    db.query(sql, (err, result) => {
+        if (err) {
+            console.error('Error fetching user_info data:', err);
+            res.status(500).json({ error: 'Internal server error' });
+        } else {
+            // Send the fetched user_info data to the client
+            res.json(result);
+        }
+    });
+});
