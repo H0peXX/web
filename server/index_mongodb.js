@@ -4,9 +4,10 @@ const mysql = require('mysql');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
 const salt = 10;
-
+const jwt = require('jsonwebtoken');
+ 
 const app = express();
 app.use(express.json());
 app.use(cors({
@@ -14,17 +15,12 @@ app.use(cors({
     methods: ["POST", "GET"],
     credentials: true
 }));
+
+
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(session({
-    secret: 'secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: false,
-        maxAge: 1000 * 60 * 60 * 24
-    }
-}))
+
+
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -37,12 +33,26 @@ app.listen(3001, () => {
     console.log("server is fine")
 })
 
-app.get('/', (req, res) => {
-    if (req.session.username) {
-        return res.json({ valid: true, username: req.session.username })
+const verifyUser = (req, res, next) => {
+    const token = req.cookies.token; // Access cookies using req.cookies
+    if (!token) {
+        return res.json({ message: "You need to login." });
     } else {
-        return res.json({ valid: false })
+        jwt.verify(token, "our-jsonwebtoken-secret-key", (err, decoded) => {
+            if (err) {
+                console.log("not Pass")
+                return res.json({ message: "Authentication Error" });
+            } else {
+                console.log("Pass")
+                req.name = decoded.name;
+                next();
+            }
+        });
     }
+};
+
+app.get('/',verifyUser, (req, res) => {
+    return res.json({status: "Success", name: req.name})
 })
 
 //Login
@@ -58,6 +68,9 @@ app.post('/login', (req, res) => {
             return res.status(500).json({ message: "Error" });
         }
         if (result.length > 0) {
+            const name = result[0].username;
+            const token = jwt.sign({name}, "our-jsonwebtoken-secret-key",{expiresIn:'30d'});
+            res.cookie('token',token);
             const hashedPassword = result[0].password;
             bcrypt.compare(req.body.password, hashedPassword, (err, response) => {
                 if (err) {
@@ -65,8 +78,8 @@ app.post('/login', (req, res) => {
                     return res.status(500).json({ message: "Error" });
                 }
                 if (response) {
-                    req.session.username = result[0].username;
-                    console.log(req.session.username);
+                    res.username = result[0].username;
+                    console.log(res.username);
                     if (result[0].role === 'user') {
                         // Redirect user to home page
                         return res.json("user");
@@ -84,9 +97,6 @@ app.post('/login', (req, res) => {
         }
     });
 });
-
-
-
 
 
 // Register
@@ -194,3 +204,13 @@ app.get('/transaction_table', (req, res) => {
         }
     });
 });
+
+
+
+// Logout endpoint
+app.post('/logout', (req, res) => {
+    res.clearCookie('token');
+    return res.json({Status: "Success"});
+
+});
+
